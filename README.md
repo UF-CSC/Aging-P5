@@ -1,10 +1,12 @@
 # CSCAgeingP5
 
+## Origin
 Code inherented from Laurent Thomas, git repo [here](https://github.com/lathomas/CSCAgeingP5)
 
+## Instruction
 CSC ageing studies on P5 data
 
-1. Setup 
+### Setup 
 
 The following works from the IHEPA machines and requires a CMSSW release to be installed.
 It was tested under CMSSW_8_0_27.
