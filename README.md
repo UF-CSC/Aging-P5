@@ -4,8 +4,6 @@
 Code inherented from Laurent Thomas, git repo [here](https://github.com/lathomas/CSCAgeingP5)
 
 ## Instruction
-CSC ageing studies on P5 data
-
 ### Setup 
 
 The following works from the IHEPA machines and requires a CMSSW release to be installed.
@@ -33,8 +31,8 @@ Finally, you will need a valid GRID certificate (to access data on HPC from IHEP
 voms-proxy-init --voms cms --valid 168:00 
 ```
 
-2. Input files 
-- This study is based on ROOT ntuples produced by Hualin Mei using the UF rootmaker on the HPC cluster:
+### Input files for 2016 analysis
+This study is based on ROOT ntuples produced by Hualin Mei using the UF rootmaker on the HPC cluster:
 
 ```
 /cms/data/store/user/hmei/rootfiles_2017/CSCNtuples_2016SingleMu_BCDEFGH_promptReco/SingleMuon/
@@ -52,8 +50,8 @@ ls /cms/data/store/user/hmei/rootfiles_2017/CSCNtuples_2016SingleMu_BCDEFGH_prom
 
 and copy SingleMuReco_2016G_list.txt to your Work/ folder in IHEPA. 
 
+### Producing small trees with information relevant for the ageing study 
 
-3. Producing small trees with information relevant for the ageing study 
 This is performed through separated scripts for each run era so that several of them can be run at the same time. 
 The code itself is in the class AnalysisGasGain. 
 Before to run the script, compile and link the HistMan and AnalysisGasGain code (if you made changes in it or run it first time) by corresponding macros build_histman.C and build_analysisgasgain.C (being in folder Src):
