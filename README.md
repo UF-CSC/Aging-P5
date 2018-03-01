@@ -87,7 +87,7 @@ source script_gasgain_rung
 The outputs will be stored in the directory defined in script_mysetup 
 All output files should then be merged into a single one for each station/ring/HV segment: (e.g. "TOTALME21HV1.root"). 
 
-4. Extracting Gas gain dependency. 
+### Extracting Gas gain dependency. 
 This is done with a C++ class ( ProduceHistosPerChannel) 
 Assuming you have the file TOTALME21HV1.root in the subfolder Work, do: 
 
