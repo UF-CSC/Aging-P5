@@ -1,0 +1,8 @@
+*.root
+AnalysisGasGain_cxx.d
+AnalysisGasGain_cxx.so
+AnalysisGasGain_cxx_ACLiC_dict_rdict.pcm
+HistMan_cxx.d
+HistMan_cxx.so
+HistMan_cxx_ACLiC_dict_rdict.pcm
+*.sw*
