@@ -6,3 +6,4 @@ HistMan_cxx.d
 HistMan_cxx.so
 HistMan_cxx_ACLiC_dict_rdict.pcm
 *.sw*
+*.pyc
