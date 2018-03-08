@@ -1,3 +1,7 @@
+export PYTHONPATH=${PYTHONPATH}:${PWD}/
+export PATH=${PATH}:${PWD}/bin/
+
+export BASE_PATH=${PWD}
 
 echo "Sourcing CMSSW_8_0_27"
 source /cvmfs/cms.cern.ch/cmsset_default.sh
