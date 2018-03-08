@@ -127,7 +127,7 @@ void AnalysisGasGain::Setup(Int_t fstat,Int_t fprint,string inp,string out)
  }
   // end of Y loc HV segment boundaries calculations
 
-  SetupPrint();
+  // SetupPrint();
   for(int i = 0; i <32;i++){
     TString treename =GetRegionName(i);
     TString filetreelocation = (TString) out;
@@ -384,8 +384,8 @@ void AnalysisGasGain::GetSegments(HistMan* histos) {
 
         Int_t key_chmb=10000*endcap+1000*station+100*ring+chamber;
 
-        if(m_nsegments_chamber.find(key_chmb)==m_nsegments_chamber.end())
-          cout<<"Error, no segments for key_chmb="<<key_chmb<<" event "<<fEvent<<endl;
+        //if(m_nsegments_chamber.find(key_chmb)==m_nsegments_chamber.end())
+        //  cout<<"Error, no segments for key_chmb="<<key_chmb<<" event "<<fEvent<<endl;
         if(m_nsegments_chamber.find(key_chmb)!=m_nsegments_chamber.end()) {
           if(m_nsegments_chamber[key_chmb]==1) {
 	    if(m_Single_cscSegments_recHitRecordX.find(key_chmb) == m_Single_cscSegments_recHitRecordX.end()) { 
@@ -462,7 +462,7 @@ void AnalysisGasGain::GetTracks(HistMan* histos) {
 		 if(m_Single_cscSegments_recHitRecordX[key_chmb][k]>-999.0)
                    nhit++;
                if(nhit != (Int_t)nlayers) {
-                 cout<<"Warning - diff. # of hits "<<nhit<<" "<<nlayers<<" "<<key_trksegm<<"  "<<key_chmb<<"  "<<fEvent<<endl;
+                 //cout<<"Warning - diff. # of hits "<<nhit<<" "<<nlayers<<" "<<key_trksegm<<"  "<<key_chmb<<"  "<<fEvent<<endl;
                  histos->fill1DHist((Float_t)nlayers,"nhits_ne_nlayers","","# of layers given in track segment and different from original segment","Entires",4,8,0.0,8.0,1.0,"Test");
 	       }
                if(nhit==(Int_t)nlayers) {
@@ -570,8 +570,8 @@ void AnalysisGasGain::GetRecHitsSumQ(HistMan* histos) {
 	           (Float_t)m_cscSegments_single_trk_recHitRecord_final.size();
 	      
 	//Laurent        histos->fill1DHist(df,"diff_map_sizes","","Difference in two map sizes","Entries",4,10,0.0,10.0,1.0,"Test");
-        if(df !=0.0) 
-	  cout<<"Warning, different sizes "<<m_cscSegments_single_trk_recHitRecord.size()<<" "<<m_cscSegments_single_trk_recHitRecord_final.size()<<" "<<fEvent<<endl;
+        //if(df !=0.0) 
+	  //cout<<"Warning, different sizes "<<m_cscSegments_single_trk_recHitRecord.size()<<" "<<m_cscSegments_single_trk_recHitRecord_final.size()<<" "<<fEvent<<endl;
 	// histos->fill1DHist((Float_t)m_cscSegments_single_trk_recHitRecord_final.size(),"final_used_rechits_no_ME14_per_event","","Number of used rechits(no ME14) per event","Entries",4,100,0.0,100.0,1.0,"Test");    //laurent: I commented this line:
 
      } // end of if(m_cscSegments_single_trk_recHitRecord.size() > 0)
@@ -583,9 +583,9 @@ void AnalysisGasGain::AddME14RecHits() {
 
      if(m_RecHitlayerME14_final.size() > 0 )
        for(map<Int_t, std::vector <Double_t> >::iterator It=m_RecHitlayerME14_final.begin(); It!=m_RecHitlayerME14_final.end(); ++It) {
-	 if(m_cscSegments_single_trk_recHitRecord_final.find((*It).first) !=
-            m_cscSegments_single_trk_recHitRecord_final.end()) 
-           cout<<"Error, key exists  "<<(*It).first<<endl;
+	 //if(m_cscSegments_single_trk_recHitRecord_final.find((*It).first) !=
+      //      m_cscSegments_single_trk_recHitRecord_final.end()) 
+       //    cout<<"Error, key exists  "<<(*It).first<<endl;
          if(m_cscSegments_single_trk_recHitRecord_final.find((*It).first) ==
             m_cscSegments_single_trk_recHitRecord_final.end()) {
 
@@ -612,7 +612,7 @@ ostringstream ss;
 
           Int_t key_layer_test=100000*endcap+10000*station+1000*ring+
                                                         10*chamber+layer;
-          if(key_layer!=key_layer_test) cout<<"Error key_layer key_layer_test "<<key_layer<<" "<<key_layer_test<<endl;
+          //if(key_layer!=key_layer_test) cout<<"Error key_layer key_layer_test "<<key_layer<<" "<<key_layer_test<<endl;
           Int_t stationring=10*station+ring;
 
           // find HV segment
@@ -678,7 +678,7 @@ ostringstream ss;
 
 	    int iregion = GetRegionIdx(station,ring,hvsgm);
 	    if(iregion >=0)  outputtree[iregion]->Fill();
-	    else cout <<"region not found! " <<endl;
+	    //else cout <<"region not found! " <<endl;
 	    
 
 	  } // end if (hvsgm > 0)
@@ -701,10 +701,10 @@ void AnalysisGasGain::CycleTree(HistMan* histos) {
 
   TTree *tree = (TTree*)f->Get("cscRootMaker/Events");
   nentries = tree->GetEntries();
-  cout<<"Total entries       "<<nentries<<endl;
+  //cout<<"Total entries       "<<nentries<<endl;
   if(flag_stat>0) nentries=flag_stat;
-  cout<<"Entries to read in  "<<nentries<<endl;
-  cout<<endl;
+  //cout<<"Entries to read in  "<<nentries<<endl;
+  //cout<<endl;
 
   // Get branches
   TBranch *b_Run=tree->GetBranch("Run");
@@ -950,7 +950,7 @@ void AnalysisGasGain::CycleTree(HistMan* histos) {
      histos->fill1DHist((Float_t)recsegtrk,"recsegtrk","","Bit 1-RecHits2D, Bit 2-Segments and Bit 3-Tracks per event","Entries",4,8,0.0,8.0,1.0,"Test");
   
      if(recsegtrk==7) { // Analyse event only when all 3 vectors not empty //Laurent: this ensures there's at least 1 rechit, 1 segment and 1 muon associated to them (??)
-      if(ient<flag_print) cout<<endl<<"*** "<<ient+1<< " Event "<<fEvent<<endl;
+      //if(ient<flag_print) cout<<endl<<"*** "<<ient+1<< " Event "<<fEvent<<endl;
 
 
      //*****************************************************************
@@ -1017,7 +1017,7 @@ void AnalysisGasGain::CycleTree(HistMan* histos) {
   // End of tree analysis printout
   //**************************************************************************
 
-  cout<<endl;
+  //cout<<endl;
   Int_t cnt=0,cnt_readin=0,cnt_used=0,cnt_usedhits=0;
   for(std::map<Int_t,Int_t>::iterator It=m_RunEvent.begin(); It!= m_RunEvent.end();++It) {
      Int_t key=(*It).first;
@@ -1026,12 +1026,12 @@ void AnalysisGasGain::CycleTree(HistMan* histos) {
      cnt_readin=cnt_readin+m_RunEvent[key];
      cnt_used=cnt_used+m_Run_usedevents[key];
      cnt_usedhits=cnt_usedhits+m_Run_usedhits[key];
-     cout<<cnt<<" Run  Events  Start  End  Duration  Used events  Used hits "<<key<<" "<<(*It).second<<" "<<m_RunStart[key]<<" "<<m_RunEnd[key]<<" "<<dur<<" "<<m_Run_usedevents[key]<<" "<<m_Run_usedhits[key]<<endl;
+     //cout<<cnt<<" Run  Events  Start  End  Duration  Used events  Used hits "<<key<<" "<<(*It).second<<" "<<m_RunStart[key]<<" "<<m_RunEnd[key]<<" "<<dur<<" "<<m_Run_usedevents[key]<<" "<<m_Run_usedhits[key]<<endl;
        }
-  cout<<"--------------------------------------------------"<<endl;
-  cout<<"Total used hits "<<cnt_usedhits<<" in "<<cnt_used<<" used events  from "<<cnt_readin<<" read in events in "<<m_RunEvent.size()<<" runs"<<endl;
-  cout<<endl;
-  cout<<" End of AnalysisGasGain::CycleTree "<<endl;
+  //cout<<"--------------------------------------------------"<<endl;
+  //cout<<"Total used hits "<<cnt_usedhits<<" in "<<cnt_used<<" used events  from "<<cnt_readin<<" read in events in "<<m_RunEvent.size()<<" runs"<<endl;
+  //cout<<endl;
+  //cout<<" End of AnalysisGasGain::CycleTree "<<endl;
 
   //*************************************************************************
   // write and close output file with hists always first in case if hists
