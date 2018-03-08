@@ -10,7 +10,7 @@ from Core.Utils.git import getGitDescribe,getGitDiff
 from Analyzer.TreeProducer import TreeProducer
 
 # Standard package
-import imp,sys,os
+import imp,sys,os,time
 
 cfgFileName             = sys.argv[1]
 file                    = open( cfgFileName,'r')
@@ -46,6 +46,8 @@ with open(gitFile,'w') as f:
 with open(gitVerboseFile,'w') as f:
     f.write(getGitDiff())
 
+start_time = time.time()
+
 print "\nLoading samples:\n"
 
 for component in componentList:
@@ -54,6 +56,10 @@ for component in componentList:
 
 communicationChannel.receive()
 
-print "\nEnd Running\n"
 if not disableProgressBar: progressMonitor.end()
 communicationChannel.end()
+
+print "\nEnd Running\n"
+print "\nOutput saved in "+outputDir+"\n"
+elapsed_time = time.time() - start_time
+print "Time used: "+str(elapsed_time)+"s"
