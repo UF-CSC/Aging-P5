@@ -5,10 +5,12 @@ from Core.HeppyResult import ComponentLoop
 
 from Core.CSCNTupleResult.Component import Component
 
+from Core.Utils.git import getGitDescribe,getGitDiff
+
 from Analyzer.TreeProducer import TreeProducer
 
 # Standard package
-import imp,sys
+import imp,sys,os
 
 cfgFileName             = sys.argv[1]
 file                    = open( cfgFileName,'r')
@@ -18,6 +20,7 @@ nCores                  = cfg.nCores
 componentList           = cfg.componentList
 disableProgressBar      = cfg.disableProgressBar
 outputPathTemplate      = cfg.outputPathTemplate
+outputDir               = os.path.dirname(cfg.outputPathTemplate)
 
 progressBar = ProgressBar()
 
@@ -31,6 +34,17 @@ else:
     
 if not disableProgressBar: progressMonitor.begin()
 communicationChannel.begin()
+
+if not os.path.exists(outputDir):
+    os.makedirs(outputDir)
+
+gitFile        = os.path.join(outputDir,"gitDetails.txt")
+gitVerboseFile = os.path.join(outputDir,"gitVerboseDetails.txt")
+with open(gitFile,'w') as f:
+    f.write(getGitDescribe())
+
+with open(gitVerboseFile,'w') as f:
+    f.write(getGitDiff())
 
 print "\nLoading samples:\n"
 
