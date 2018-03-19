@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-ln -sf ${BASE_PATH}/run_CSCNTuple.py tmp_CSCNTuple.py
+ln -sf ${BASE_PATH}/skim_CSCNTuple.py tmp_CSCNTuple.py
 
 # test the presence of the interactive flag
 interactive=false
