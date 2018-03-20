@@ -29,4 +29,13 @@ class GasGainPlotter(Module):
             self.writer.objs["SumQ"+str(self._cacheDict[(recHit.ID_station,recHit.ID_ring,hvsgm)])].Fill(recHit.SumQ)
         return True
 
-
+class SkimTreeGasGainPlotter(Module):
+    def __init__(self,name):
+        super(SkimTreeGasGainPlotter,self).__init__(name)
+    
+    def begin(self):
+        self.writer.book("SumQ"+self.dataset.name,"TH1D",self.dataset.name,"",3000,0,3000)
+    
+    def analyze(self,event):
+        self.writer.objs["SumQ"+self.dataset.name].Fill(event._rhsumQ_RAW[0])
+        return True
