@@ -38,4 +38,8 @@ class SkimTreeGasGainPlotter(Module):
     
     def analyze(self,event):
         self.writer.objs["SumQ"+self.dataset.name].Fill(event._rhsumQ_RAW[0])
+        rhidStr = str(event._rhid[0])
+        if "SumQ"+rhidStr not in self.writer.objs:
+            self.writer.book("SumQ"+rhidStr,"TH1D","SumQ"+rhidStr,"",3000,0,3000)
+        self.writer.objs["SumQ"+rhidStr].Fill(event._rhsumQ_RAW[0])
         return True
