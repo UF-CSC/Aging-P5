@@ -11,7 +11,7 @@ from Core.HeppyResult.UFComponentReader import UFComponentReader
 from Core.Utils.git import getGitDescribe,getGitDiff
 
 # Standard package
-import imp,sys,os
+import imp,sys,os,time
 
 cfgFileName             = sys.argv[1]
 file                    = open( cfgFileName,'r')
@@ -27,6 +27,8 @@ sequence                = cfg.sequence
 outputInfo              = cfg.outputInfo
 endSequence             = cfg.endSequence
 justEndSequence         = cfg.justEndSequence if hasattr(cfg,"justEndSequence") else False
+
+start_time = time.time()
 
 if not justEndSequence:
     progressBar = ProgressBar()
@@ -70,3 +72,6 @@ if endSequence:
     print "\nBegin Summarising\n"
     print "\nInput used: "+outputInfo.outputDir+"\n"
     endSequence.run(outputInfo)
+
+elapsed_time = time.time() - start_time
+print "Time used: "+str(elapsed_time)+"s"
