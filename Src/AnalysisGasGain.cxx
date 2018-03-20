@@ -47,13 +47,44 @@ AnalysisGasGain::AnalysisGasGain() { }
 AnalysisGasGain::~AnalysisGasGain() { }
 
 /* **************************** Setup ************************************* */
+void AnalysisGasGain::SetupTree(string inp,string out)
+{
+  ntuplename=inp;
+  histrootname=out;
+  // SetupPrint();
+  for(int i = 0; i <32;i++){
+    TString treename =GetRegionName(i);
+    TString filetreelocation = (TString) out;
+    filetreelocation.ReplaceAll(".root",treename+"_tree.root");
+    myoutfilefortree[i] = new TFile(filetreelocation,"recreate"); 
+    
+    outputtree[i] = new TTree("tree","tree");
+    outputtree[i]->Branch("_passZmumusel",   &passZmumusel,   "_passZmumusel/O");
+    outputtree[i]->Branch("_eventNb",   &_eventNb,   "_eventNb/l");
+    outputtree[i]->Branch("_runNb",   &_runNb,   "_runNb/l");
+    outputtree[i]->Branch("_lumiBlock",   &_lumiBlock,   "_lumiBlock/l");
+    outputtree[i]->Branch("_rhid",&_rhid,"_rhid/I");
+    outputtree[i]->Branch("_stationring",&_stationring,"_stationring/I");
+    outputtree[i]->Branch("_rhsumQ",&_rhsumQ,"_rhsumQ/D");
+    outputtree[i]->Branch("_rhsumQ_RAW",&_rhsumQ_RAW,"_rhsumQ_RAW/D");
+    outputtree[i]->Branch("_HV",&_HV,"_HV/D");
+    outputtree[i]->Branch("_pressure",&_pressure,"_pressure/D");
+    outputtree[i]->Branch("_temperature",&_temperature,"_temperature/D");
+    outputtree[i]->Branch("_instlumi",&_instlumi,"_instlumi/D");
+    outputtree[i]->Branch("_integratelumi",&_integratelumi,"_integratelumi/D");
+    outputtree[i]->Branch("_timesecond",&_timesecond,"_timesecond/i") ;
+    outputtree[i]->Branch("_n_PV",&_n_PV,"_n_PV/I");
+    outputtree[i]->Branch("_bunchcrossing",&_bunchcrossing,"_bunchcrossing/I");
+    outputtree[i]->Branch("_etamuon",&_etamuon,"_etamuon/D");
+    outputtree[i]->Branch("_phimuon",&_phimuon,"_phimuon/D");
+    outputtree[i]->Branch("_ptmuon",&_ptmuon,"_ptmuon/D");
+  }
+}
 
-void AnalysisGasGain::Setup(Int_t fstat,Int_t fprint,string inp,string out)
+void AnalysisGasGain::Setup(Int_t fstat,Int_t fprint)
 {
   flag_stat=fstat;
   flag_print=fprint;
-  ntuplename=inp;
-  histrootname=out;
 
   Int_t strng[10]={11,12,13,14,21,22,31,32,41,42};
   m_ordstatring.clear();
@@ -126,40 +157,6 @@ void AnalysisGasGain::Setup(Int_t fstat,Int_t fprint,string inp,string out)
    me234_2YlocHVsgmHigh[i]   = -h[5]/2.0+dftoap+dapme234_2High[i]/10.0; 
  }
   // end of Y loc HV segment boundaries calculations
-
-  // SetupPrint();
-  for(int i = 0; i <32;i++){
-    TString treename =GetRegionName(i);
-    TString filetreelocation = (TString) out;
-    filetreelocation.ReplaceAll(".root",treename+"_tree.root");
-    myoutfilefortree[i] = new TFile(filetreelocation,"recreate"); 
-    
-    outputtree[i] = new TTree("tree","tree");
-  outputtree[i]->Branch("_passZmumusel",   &passZmumusel,   "_passZmumusel/O");
-  outputtree[i]->Branch("_eventNb",   &_eventNb,   "_eventNb/l");
-  outputtree[i]->Branch("_runNb",   &_runNb,   "_runNb/l");
-  outputtree[i]->Branch("_lumiBlock",   &_lumiBlock,   "_lumiBlock/l");
-  outputtree[i]->Branch("_rhid",&_rhid,"_rhid/I");
-  outputtree[i]->Branch("_stationring",&_stationring,"_stationring/I");
-  outputtree[i]->Branch("_rhsumQ",&_rhsumQ,"_rhsumQ/D");
-  outputtree[i]->Branch("_rhsumQ_RAW",&_rhsumQ_RAW,"_rhsumQ_RAW/D");
-  outputtree[i]->Branch("_HV",&_HV,"_HV/D");
-  outputtree[i]->Branch("_pressure",&_pressure,"_pressure/D");
-  outputtree[i]->Branch("_temperature",&_temperature,"_temperature/D");
-  outputtree[i]->Branch("_instlumi",&_instlumi,"_instlumi/D");
-  outputtree[i]->Branch("_integratelumi",&_integratelumi,"_integratelumi/D");
-  outputtree[i]->Branch("_timesecond",&_timesecond,"_timesecond/i") ;
-  outputtree[i]->Branch("_n_PV",&_n_PV,"_n_PV/I");
-  outputtree[i]->Branch("_bunchcrossing",&_bunchcrossing,"_bunchcrossing/I");
-
-
-
-
-   outputtree[i]->Branch("_etamuon",&_etamuon,"_etamuon/D");
-   outputtree[i]->Branch("_phimuon",&_phimuon,"_phimuon/D");
-   outputtree[i]->Branch("_ptmuon",&_ptmuon,"_ptmuon/D");
-
-  }
 }
 
 /* *********************** SetupPrint ************************************* */
@@ -668,7 +665,7 @@ ostringstream ss;
 	      ", "<<  (unsigned long)fvertex_nVertex<<
 	      ", "<<  (long)fvertex_nVertex<<
 	      endl;// ", "<<_n_PV <<endl;*/
-	    _n_PV = fvertex_nVertex;
+	    //_n_PV = fvertex_nVertex;
 
 	    _rhsumQ_RAW = sumq;
 	    std::pair<double,double>  gasgainandhv = UncorrGasGain_HVInitial2016(sumq,fRun,_stationring,_rhid);
@@ -709,7 +706,7 @@ void AnalysisGasGain::CycleTree(HistMan* histos) {
   // Get branches
   TBranch *b_Run=tree->GetBranch("Run");
   TBranch *b_LumiSect=tree->GetBranch("LumiSect");
-  TBranch *b_vertex_nVertex=tree->GetBranch("vertex_nVertex");
+  //TBranch *b_vertex_nVertex=tree->GetBranch("vertex_nVertex");
   TBranch *b_Event=tree->GetBranch("Event");
   TBranch *b_timeSecond=tree->GetBranch("timeSecond");
   TBranch *b_BunchCrossing=tree->GetBranch("BunchCrossing");
@@ -753,7 +750,7 @@ void AnalysisGasGain::CycleTree(HistMan* histos) {
   b_Event->SetAddress(&fEvent);
   b_LumiSect->SetAddress(&fLumiSect);
   b_timeSecond->SetAddress(&ftimeSecond);
-  b_vertex_nVertex->SetAddress(&fvertex_nVertex);
+  // b_vertex_nVertex->SetAddress(&fvertex_nVertex);
   
   b_recHits2D_nRecHits2D->SetAddress(&frecHits2D_nRecHits2D);
   b_recHits2D_ID_endcap->SetAddress(frecHits2D_ID_endcap); // no & for array
@@ -820,7 +817,7 @@ void AnalysisGasGain::CycleTree(HistMan* histos) {
      b_LumiSect->GetEntry(ient);
      b_timeSecond->GetEntry(ient);
      
-     b_vertex_nVertex->GetEntry(ient);
+     //b_vertex_nVertex->GetEntry(ient);
      b_BunchCrossing->GetEntry(ient);
 
      

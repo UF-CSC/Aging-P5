@@ -22,7 +22,8 @@ void analysisgasgain(Int_t fstat,Int_t fprint,string ntuplename,string histroot)
   string prefix = "root://cmsio2.rc.ufl.edu/";
   ntuplename = prefix+ntuplename;
   cout << ntuplename <<endl;
-  anl->Setup(fstat,fprint,ntuplename,histroot);
+  anl->Setup(fstat,fprint);
+  anl->SetupTree(ntuplename,histroot);
   anl->Analyze(histos);
 
   delete anl;

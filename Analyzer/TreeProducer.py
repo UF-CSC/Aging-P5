@@ -18,7 +18,8 @@ class TreeProducer(ComponentProcessor):
         inputPath = self.prefix+self.component.path.replace("/cms/data","")
         outputPath = self.outputPathTemplate
         self._reportProgress(progressReporter,0,2)
-        anl.Setup(0,0,inputPath,self.outputPathTemplate%self.component.name)
+        anl.Setup(0,0)
+        anl.SetupTree(inputPath,self.outputPathTemplate%self.component.name)
         anl.Analyze(histMan)
         self._reportProgress(progressReporter,1,2)
 

@@ -126,7 +126,9 @@ public:
   AnalysisGasGain();
   virtual ~AnalysisGasGain();
 
-  void Setup(Int_t,Int_t,string,string);
+  void Setup(Int_t,Int_t);
+  
+  void SetupTree(string,string);
 
   void SetupPrint();
 
