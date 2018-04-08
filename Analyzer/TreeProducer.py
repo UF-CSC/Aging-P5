@@ -1,10 +1,11 @@
 from Core.CSCNTupleResult.ComponentProcessor import ComponentProcessor
 from Core.CSCNTupleResult.ProgressReportWriter import ProgressReportWriter
+from Core.NanoAODResult.FileInfo import prefix_UFTier2
 import ROOT,os,uuid
 
 class TreeProducer(ComponentProcessor):
     def __init__(self,component,outputPathTemplate):
-        self.prefix = "root://cmsio2.rc.ufl.edu/"
+        self.prefix = prefix_UFTier2
         self.outputPathTemplate = outputPathTemplate
         self.component = component
         self.progressReportWriter = ProgressReportWriter()
