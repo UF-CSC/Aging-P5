@@ -5,7 +5,7 @@ paths_SingleMuon2017E_v1_partial = ["/cms/data/store/user/klo/CSC/CSCNTuple/Sing
 
 comp_SingleMuon2017E_v1_partial = []
 for path in paths_SingleMuon2017E_v1_partial:
-    comp_SingleMuon2017E_v1_partial.extend(makeComponentsFromPath(path))
+    comp_SingleMuon2017E_v1_partial.extend(makeComponentsFromPath(path,path.split("/")[-1]))
 
 comp_SingleMuon2017E_v1_partial_anl = []
 comp_SingleMuon2017E_v1_partial_anl_split = []
