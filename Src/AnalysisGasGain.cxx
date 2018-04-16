@@ -67,6 +67,8 @@ void AnalysisGasGain::SetupTree(string inp,string out)
     outputtree[i]->Branch("_stationring",&_stationring,"_stationring/I");
     outputtree[i]->Branch("_rhsumQ",&_rhsumQ,"_rhsumQ/D");
     outputtree[i]->Branch("_rhsumQ_RAW",&_rhsumQ_RAW,"_rhsumQ_RAW/D");
+    outputtree[i]->Branch("_xloc",&_xloc,"_xloc/D");
+    outputtree[i]->Branch("_yloc",&_yloc,"_yloc/D");
     outputtree[i]->Branch("_HV",&_HV,"_HV/D");
     outputtree[i]->Branch("_pressure",&_pressure,"_pressure/D");
     outputtree[i]->Branch("_temperature",&_temperature,"_temperature/D");
@@ -613,7 +615,10 @@ ostringstream ss;
           Int_t stationring=10*station+ring;
 
           // find HV segment
+      Float_t xloc=(Float_t)(*It).second[0];
+      _xloc = (Double_t) xloc;
 	  Float_t yloc=(Float_t)(*It).second[1];
+      _yloc = (Double_t) yloc;
           Int_t hvsgm=doHVsegment(yloc,station,ring,layer);
 	  //        histos->fill1DHist((float)hvsgm,"HV_segment","","HV segment #","Entries",4,6,0.0,6.0,1.0,"Hists"); //commented out by Laurent
           Float_t sumq=(Float_t)(*It).second[2];

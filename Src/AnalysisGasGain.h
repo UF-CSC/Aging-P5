@@ -108,6 +108,8 @@ private:
   int _rhid, _stationring;
   double _rhsumQ;
   double _rhsumQ_RAW;
+  double _xloc;
+  double _yloc;
   double _HV;
   double _pressure;
   double _temperature;
