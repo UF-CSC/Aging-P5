@@ -59,7 +59,7 @@ class SkimTreeGasGainEndModule(EndModule):
         h_trim_1D           = ROOT.TH1D("h_trim_1D","Gas Gain 1D (Trim Mean)",1500,0,1500)
         h_trim_1D_ME11      = ROOT.TH1D("h_trim_1D_ME11","Gas Gain 1D, ME11 (Trim Mean)",1500,0,1500)
         h_trim_1D_MEX1      = ROOT.TH1D("h_trim_1D_MEX1","Gas Gain 1D, MEX1 (Trim Mean)",1500,0,1500)
-        h_trim_1D_non_MEX1  = ROOT.TH1D("h_trim_1D_non_MEX1","Gas Gain 1D, ME11 (Trim Mean)",1500,0,1500)
+        h_trim_1D_non_MEX1  = ROOT.TH1D("h_trim_1D_non_MEX1","Gas Gain 1D, Others (Trim Mean)",1500,0,1500)
         h_trim_corrected_1D = ROOT.TH1D("h_trim_corrected_1D","Gas Gain 1D (Trim Mean Corrected)",1500,0,5)
         h_entry_1D          = ROOT.TH1D("h_entry_1D","Number of entries 1D",100,0,10000)
         for isample,sample in enumerate(collector.samples):
@@ -68,8 +68,16 @@ class SkimTreeGasGainEndModule(EndModule):
             h_trim_summary.SetBinContent(isample+1,trimHist.GetMean())
             h_trim_summary.SetBinError(isample+1,trimHist.GetRMS()/math.sqrt(trimHist.Integral()))
             h_trim_summary.GetXaxis().SetBinLabel(isample+1,sample)
+            if sample[2:4] == "11": # ME11
+                histKey = "ME11"
+            elif sample[3:4] == "1": #MEX1
+                histKey = "MEX1"
+            else:
+                histKey = "MEX234"
             for key in collector.fileDict[sample].GetListOfKeys():
                 if key.GetName().startswith("ME"): continue
+                if "Loc" in key.GetName(): continue
+                if "SumQX" in key.GetName() or "SumQY" in key.GetName(): continue
                 rhidList = self.convert_rhid(key.GetName().replace("SumQ",""))
                 detidStr =  self.convert_key(rhidList)
                 if detidStr in self.disHVList or detidStr in self.weakHVList: 
@@ -78,7 +86,8 @@ class SkimTreeGasGainEndModule(EndModule):
                 hist = collector.getObj(sample,key.GetName())
                 trimHist1D = self.makeTrimHist(hist) 
                 h_trim_1D.Fill(trimHist1D.GetMean())
-                h_trim_corrected_1D.Fill(trimHist1D.GetMean()/trimHist.GetMean())
+                #h_trim_corrected_1D.Fill(trimHist1D.GetMean()/trimHist.GetMean())
+                h_trim_corrected_1D.Fill(trimHist1D.GetMean()/self.avgGasGainDict[histKey].GetMean())
                 h_entry_1D.Fill(hist.GetEntries())
                 if hist.GetEntries() < 10:
                     badChTextFile.write(" ".join([detidStr,key.GetName(),sample,])+"\n")
@@ -101,6 +110,21 @@ class SkimTreeGasGainEndModule(EndModule):
         c.SaveAs(outputDir+"trim_mean_1D.png")
         h_entry_1D.Draw()
         c.SaveAs(outputDir+"number_of_entries.png")
+        leg = ROOT.TLegend(0.63,0.58,0.89,0.87)
+        drawList = [h_trim_1D_ME11,h_trim_1D_MEX1,h_trim_1D_non_MEX1]
+        maxRange = max([hist.GetMaximum() for hist in drawList])
+        for ihist,hist in enumerate(drawList):
+            hist.SetStats(0)
+            hist.GetYaxis().SetRangeUser(0.01,maxRange*1.2)
+            leg.AddEntry(hist,hist.GetTitle())
+            hist.SetTitle("")
+            hist.SetLineColor(ihist+1)
+            if ihist:
+                hist.Draw("same")
+            else:
+                hist.Draw()
+        leg.Draw()
+        c.SaveAs(outputDir+"trim_mean_corrected_1D_separate.png")
         h_trim_corrected_1D.SetStats(0)
         h_trim_corrected_1D.GetXaxis().SetLabelSize(0.025)
         h_trim_corrected_1D.Draw()
@@ -112,7 +136,6 @@ class SkimTreeGasGainEndModule(EndModule):
         outputFile.Close()
 
         textFile.close()
-
 
     def makeAvgGasGain(self,collector):
         histDict = {}
@@ -129,9 +152,35 @@ class SkimTreeGasGainEndModule(EndModule):
             else:
                 histDict[histKey].Add(hist)
         
+        self.avgGasGainDict = {}
         for histKey,sumHist in histDict.iteritems():
             trimSumHist = self.makeTrimHist(sumHist)
+            self.avgGasGainDict[histKey] = trimSumHist
             print "Trimmed mean with "+histKey+": "+str(trimSumHist.GetMean())
+
+    def makePosDepGasGain(self,collector,outputDir):
+        outDir = outputDir+"/PosDepGasGain/"
+        if not os.path.exists(os.path.abspath(outDir)):
+            os.makedirs(os.path.abspath(outDir))
+        
+        c = ROOT.TCanvas()
+        for isample,sample in enumerate(collector.samples):
+            selectedList = [key for key in collector.fileDict[sample].GetListOfKeys() if key.GetName().startswith("SumQY") ]
+            nBins = len(selectedList)
+            summaryHist = ROOT.TH1D(sample+"_PosDepGasGain","",nBins,-0.5,nBins-0.5)
+            for ikey,key in enumerate(selectedList):
+                if not key.GetName().startswith("SumQY"): continue
+                hist = collector.getObj(sample,key.GetName())
+                trimHist = self.makeTrimHist(hist)
+                trimMean = trimHist.GetMean()
+                summaryHist.SetBinContent(ikey+1,trimMean)
+                if trimHist.Integral():
+                    summaryHist.SetBinError(ikey+1,trimHist.GetRMS()/math.sqrt(trimHist.Integral()))
+                summaryHist.GetXaxis().SetBinLabel(ikey+1,key.GetName().split("_")[1])
+                summaryHist.SetStats(0)
+            summaryHist.Draw()
+            c.SaveAs(outDir+"/"+sample+".png")
+            c.SaveAs(outDir+"/"+sample+".pdf")
 
     def makeEntriesHist(self,collector,outputDir):
         outDir = outputDir+"/Entries/"
@@ -144,6 +193,8 @@ class SkimTreeGasGainEndModule(EndModule):
             histDict[sample] = ROOT.TH1D("h_entry_1D_"+sample,"Number of entries 1D "+sample,100,0,10000)
             for key in collector.fileDict[sample].GetListOfKeys():
                 if key.GetName().startswith("ME"): continue
+                if "Loc" in key.GetName(): continue
+                if "SumQX" in key.GetName() or "SumQY" in key.GetName(): continue
                 rhidList = self.convert_rhid(key.GetName().replace("SumQ",""))
                 detidStr =  self.convert_key(rhidList)
                 if detidStr in self.disHVList or detidStr in self.weakHVList: continue
@@ -153,6 +204,18 @@ class SkimTreeGasGainEndModule(EndModule):
             c.SaveAs(outDir+"/"+sample+".png")
         self.EntriesHistDict = histDict
 
+    def makeLocHist(self,collector,outputDir):
+        outDir = outputDir+"/LocXY/"
+        if not os.path.exists(os.path.abspath(outDir)):
+            os.makedirs(os.path.abspath(outDir))
+
+        c = ROOT.TCanvas()
+        for var in ["XLoc","YLoc"]:
+            for isample,sample in enumerate(collector.samples):
+                hist = collector.getObj(sample,var+sample)
+                hist.Draw()
+                c.SaveAs(outDir+"/"+var+"-"+sample+".png")
+
     def __call__(self,collector):
 
         outputDir = self.outputDir
@@ -160,9 +223,11 @@ class SkimTreeGasGainEndModule(EndModule):
             os.makedirs(os.path.abspath(outputDir))
 
         collector.samples.sort()
-        self.makeEntriesHist(collector,outputDir)
-        self.make1DSummaryHist(collector,outputDir)
+        #self.makeLocHist(collector,outputDir)
+        #self.makeEntriesHist(collector,outputDir)
         self.makeAvgGasGain(collector)
+        #self.makePosDepGasGain(collector,outputDir)
+        self.make1DSummaryHist(collector,outputDir)
 
         c = ROOT.TCanvas()
         for isample,sample in enumerate(collector.samples):
