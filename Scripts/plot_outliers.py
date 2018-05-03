@@ -1,12 +1,14 @@
-import ROOT,sys
+import ROOT,sys,os
 
-textFile = open("/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-04-09/ZMuMuSelection_ExcludeBadChannels/Outlier.txt","r")
+textFile = open("/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-04-16/ZMuMuSelection_ExcludeBadChannels_PosStep20_CombinedME11ab/Outlier.txt","r")
 lines = textFile.readlines()
 
-baseDir = "/raid/raid7/lucien/CSC/GasGain/Log/2018-04-08/comp_SingleMuon2017E_v2_skim_anl_all_ZMuMu_allChannel/"
-outputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-04-09/ZMuMuSelection_ExcludeBadChannels/OutlierPlot/"
+baseDir = "/raid/raid7/lucien/CSC/GasGain/Log/2018-04-16/comp_SingleMuon2017E_v3_skim_anl_all_ZMuMu_allChannel_6/"
+outputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-04-16/ZMuMuSelection_ExcludeBadChannels_PosStep20_CombinedME11ab/OutlierPlot/"
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
+if not os.path.exists(outputDir):
+    os.makedirs(outputDir)
 c = ROOT.TCanvas()
 for line in lines:
     items = line.split()
