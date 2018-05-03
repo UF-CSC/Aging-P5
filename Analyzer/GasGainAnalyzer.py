@@ -2,7 +2,7 @@ from Core.Module import Module
 
 from Core.CSCNTupleResult.Collection import Collection
 
-from Config.Chamber import ChamberDict
+from Config.Chamber import *
 
 import ROOT,os
 from bisect import bisect_left
@@ -31,28 +31,11 @@ class GasGainPlotter(Module):
         return True
 
 class SkimTreeGasGainPlotter(Module):
-    def __init__(self,name,x_segments,y_segments):
-        super(SkimTreeGasGainPlotter,self).__init__(name)
-        self.x_segments = x_segments 
-        self.y_segments = y_segments 
-    
     def begin(self):
         self.writer.book("SumQ"+self.dataset.name,"TH1D",self.dataset.name,"",3000,0,3000)
-        for xseg in self.x_segments:
-            name = "SumQX"+"_"+str(xseg)+"_"+self.dataset.name
-            self.writer.book(name,"TH1D",name,"",3000,0,3000)
-        for yseg in self.y_segments:
-            name = "SumQY"+"_"+str(yseg)+"_"+self.dataset.name
-            self.writer.book(name,"TH1D",name,"",3000,0,3000)
 
     def analyze(self,event):
         self.writer.objs["SumQ"+self.dataset.name].Fill(event._rhsumQ_RAW[0])
-        xindex = bisect_left(self.x_segments,event._xloc[0])
-        if xindex == len(self.x_segments): xindex -= 1
-        self.writer.objs["SumQX"+"_"+str(self.x_segments[xindex])+"_"+self.dataset.name].Fill(event._rhsumQ_RAW[0])
-        yindex = bisect_left(self.y_segments,event._yloc[0])
-        if yindex == len(self.y_segments): yindex -= 1
-        self.writer.objs["SumQY"+"_"+str(self.y_segments[yindex])+"_"+self.dataset.name].Fill(event._rhsumQ_RAW[0])
         rhidStr = str(event._rhid[0])
         if self.dataset.name == "ME11": rhidStr = rhidStr[0:2]+"1"+rhidStr[3:]
         if "SumQ"+rhidStr not in self.writer.objs:
@@ -61,26 +44,27 @@ class SkimTreeGasGainPlotter(Module):
         return True
 
 class SkimTreePositionPlotter(Module):
-    def __init__(self,name,x_segments,y_segments):
+    def __init__(self,name,y_seg_dict):
         super(SkimTreePositionPlotter,self).__init__(name)
-        self.x_segments = x_segments 
-        self.y_segments = y_segments 
+        self.y_seg_dict = y_seg_dict
+        self.nYBins = 5
     
     def begin(self):
-        for xseg in self.x_segments:
-            name = "XLoc"+"_"+str(xseg)+"_"+self.dataset.name
-            self.writer.book(name,"TH1D",name,"",100,-150,150)
-        for yseg in self.y_segments:
-            name = "YLoc"+"_"+str(yseg)+"_"+self.dataset.name
-            self.writer.book(name,"TH1D",name,"",100,-200,200)
+        self.binEdgeDict = {}
+        self.chamberType = self.dataset.name[0:4]
+        lowEdge,highEdge = self.y_seg_dict[self.chamberType]
+        self.yBinEdges = [lowEdge+i*(highEdge-lowEdge)/self.nYBins for i in range(0,self.nYBins+1)]
+        for ybin in self.yBinEdges:
+            name = "PosDepSumQ"+"_YLoc"+str(int(ybin))+"_"+self.chamberType
+            self.writer.book(name,"TH1D",name,"",3000,0,3000)
     
     def analyze(self,event):
-        xindex = bisect_left(self.x_segments,event._xloc[0])
-        if xindex == len(self.x_segments): xindex -= 1
-        self.writer.objs["XLoc"+"_"+str(self.x_segments[xindex])+"_"+self.dataset.name].Fill(event._xloc[0])
-        yindex = bisect_left(self.y_segments,event._yloc[0])
-        if yindex == len(self.y_segments): yindex -= 1
-        self.writer.objs["YLoc"+"_"+str(self.y_segments[yindex])+"_"+self.dataset.name].Fill(event._yloc[0])
+        #index = bisect_left(self.x_segments,event._xloc[0])
+        #if xindex == len(self.x_segments): xindex -= 1
+        #self.writer.objs["XLoc"+"_"+str(self.x_segments[xindex])+"_"+self.dataset.name].Fill(event._xloc[0])
+        yindex = bisect_left(self.yBinEdges,event._yloc[0])
+        if yindex == len(self.yBinEdges): yindex -= 1
+        self.writer.objs["PosDepSumQ"+"_YLoc"+str(int(self.yBinEdges[yindex]))+"_"+self.chamberType].Fill(event._rhsumQ_RAW[0])
         return True
 
 

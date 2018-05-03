@@ -4,17 +4,10 @@ import os,ROOT,math,pickle
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
-class SkimTreeGasGainEndModule(EndModule):
+class BaseEndModule(EndModule):
     def __init__(self,outputDir):
         self.outputDir = outputDir
         self.trimRatio = 0.7
-        self.makeBadChannelList()
-
-    def makeBadChannelList(self):
-        disHVFilePath = os.environ['BASE_PATH']+"/Data/BadHVChannel/hv_disabled_channels.pkl"
-        self.disHVList = pickle.load(open(disHVFilePath,"r"))
-        weakHVFilePath = os.environ['BASE_PATH']+"/Data/BadHVChannel/hv_weak_channels.pkl"
-        self.weakHVList = pickle.load(open(weakHVFilePath,"r"))
 
     @staticmethod
     def convert_rhid(rhidStr):
@@ -48,6 +41,104 @@ class SkimTreeGasGainEndModule(EndModule):
         else:
             keyStr = "/".join([prefixStr,str(ring),chamberStr,str(layer),"HVSegment"+str(hvseg)])
         return keyStr
+
+    def makeTrimHist(self,hist):
+        trimHist = hist.Clone(hist.GetName()+"_trim")
+        integral = 0.
+        normalisation = hist.Integral()
+        for ibin in range(1,trimHist.GetNbinsX()+1):
+            if integral < self.trimRatio*normalisation:
+                integral += hist.GetBinContent(ibin)
+            else:
+                trimHist.SetBinContent(ibin,0)
+        return trimHist
+
+class SkimTreePositionEndModule(BaseEndModule):
+    def __init__(self,outputDir,chamberTypes,y_seg_dict,normalize=False):
+        super(SkimTreePositionEndModule,self).__init__(outputDir)
+        self.chamberTypes = chamberTypes
+        self.y_seg_dict = y_seg_dict
+        self.nYBins = 5
+        self.normalize = normalize
+
+    def __call__(self,collector):
+
+        outputDir = self.outputDir
+        if not os.path.exists(os.path.abspath(outputDir)):
+            os.makedirs(os.path.abspath(outputDir))
+
+        collector.samples.sort()
+        self.makeAdcChargePlot(collector,outputDir)
+
+
+    def makeAdcChargePlot(self,collector,outputDir):
+        outHistDict = {}
+        for isample,sample in enumerate(collector.samples):
+            chamberType = sample[0:4]
+            lowEdge,highEdge = self.y_seg_dict[chamberType]
+            yBinEdges = [lowEdge+i*(highEdge-lowEdge)/self.nYBins for i in range(0,self.nYBins+1)]
+            for ybin in yBinEdges:
+                key = (chamberType,int(ybin))
+                if key not in outHistDict:
+                    outHistDict[key] = collector.getObj(sample,"PosDepSumQ"+"_YLoc"+str(int(ybin))+"_"+chamberType)
+                else:
+                    outHistDict[key].Add(collector.getObj(sample,"PosDepSumQ"+"_YLoc"+str(int(ybin))+"_"+chamberType))
+        
+        c = ROOT.TCanvas()
+        for chamberType in self.chamberTypes:
+            keyList = [key[1] for key in outHistDict if key[0] == chamberType]
+            keyList.sort()
+            histList = [outHistDict[(chamberType,key)] for key in keyList]
+            for hist in histList:
+                hist.Rebin(20)
+                if hist.Integral(): 
+                    hist.Scale(1./hist.Integral())
+            maximum = max([hist.GetMaximum() for hist in histList])
+            leg = ROOT.TLegend(0.63,0.58,0.89,0.87)
+            leg.SetTextSize(0.02)
+            summary_hist = ROOT.TH1D("summary_"+chamberType,"",len(histList),-0.5,len(histList)-0.5)
+            for i,key in enumerate(keyList):
+                hist = outHistDict[(chamberType,key)]
+                trimHist = self.makeTrimHist(hist)
+                summary_hist.SetBinContent(i+1,trimHist.GetMean())
+                if trimHist.Integral():
+                    integral = trimHist.GetEntries() if self.normalize else trimHist.Integral()
+                    summary_hist.SetBinError(i+1,trimHist.GetRMS()/math.sqrt(integral))
+                summary_hist.GetXaxis().SetBinLabel(i+1,"Y position: "+str(key))
+                leg.AddEntry(hist,"Y position: "+str(key))
+                hist.SetLineColor(i+1)
+                hist.SetStats(0)
+                hist.GetYaxis().SetRangeUser(0.,1.2*maximum)
+                if i:
+                    hist.Draw("same")
+                else:
+                    hist.Draw()
+            leg.Draw()
+            c.SetLogy(0)
+            c.SaveAs(outputDir+"SumQ_"+chamberType+".png")
+            c.SaveAs(outputDir+"SumQ_"+chamberType+".pdf")
+            summary_hist.SetStats(0)
+            summary_hist.Draw()
+            c.SaveAs(outputDir+"summary_"+chamberType+".png")
+            c.SaveAs(outputDir+"summary_"+chamberType+".pdf")
+            #c.SetLogy(1)
+            #for i,key in enumerate(keyList):
+            #    hist = outHistDict[(chamberType,key)]
+            #    hist.GetYaxis().SetRangeUser(0.01,1.)
+            #c.SaveAs(outputDir+"SumQ_"+chamberType+"_log.png")
+            #c.SaveAs(outputDir+"SumQ_"+chamberType+"_log.pdf")
+            
+
+class SkimTreeGasGainEndModule(BaseEndModule):
+    def __init__(self,outputDir):
+        super(SkimTreeGasGainEndModule,self).__init__(outputDir)
+        self.makeBadChannelList()
+
+    def makeBadChannelList(self):
+        disHVFilePath = os.environ['BASE_PATH']+"/Data/BadHVChannel/hv_disabled_channels.pkl"
+        self.disHVList = pickle.load(open(disHVFilePath,"r"))
+        weakHVFilePath = os.environ['BASE_PATH']+"/Data/BadHVChannel/hv_weak_channels.pkl"
+        self.weakHVList = pickle.load(open(weakHVFilePath,"r"))
     
     def make1DSummaryHist(self,collector,outputDir):
         c = ROOT.TCanvas()
@@ -272,9 +363,9 @@ class SkimTreeGasGainEndModule(EndModule):
         collector.samples.sort()
         #self.makeLocHist(collector,outputDir)
         #self.makeEntriesHist(collector,outputDir)
-        self.makeAvgGasGain(collector)
-        #self.makePosDepGasGain(collector,outputDir)
-        self.make1DSummaryHist(collector,outputDir)
+        #self.makeAvgGasGain(collector)
+        self.makePosDepGasGain(collector,outputDir)
+        #self.make1DSummaryHist(collector,outputDir)
 
         c = ROOT.TCanvas()
         for isample,sample in enumerate(collector.samples):
@@ -282,17 +373,3 @@ class SkimTreeGasGainEndModule(EndModule):
             hist.SetStats(0)
             hist.Draw()
             c.SaveAs(outputDir+sample+".png")
-
-
-    def makeTrimHist(self,hist):
-        trimHist = hist.Clone(hist.GetName()+"_trim")
-        integral = 0.
-        normalisation = hist.Integral()
-        for ibin in range(1,trimHist.GetNbinsX()+1):
-            if integral < self.trimRatio*normalisation:
-                integral += hist.GetBinContent(ibin)
-            else:
-                trimHist.SetBinContent(ibin,0)
-        return trimHist
-        
-
