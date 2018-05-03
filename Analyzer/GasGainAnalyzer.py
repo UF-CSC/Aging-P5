@@ -54,6 +54,7 @@ class SkimTreeGasGainPlotter(Module):
         if yindex == len(self.y_segments): yindex -= 1
         self.writer.objs["SumQY"+"_"+str(self.y_segments[yindex])+"_"+self.dataset.name].Fill(event._rhsumQ_RAW[0])
         rhidStr = str(event._rhid[0])
+        if self.dataset.name == "ME11": rhidStr = rhidStr[0:2]+"1"+rhidStr[3:]
         if "SumQ"+rhidStr not in self.writer.objs:
             self.writer.book("SumQ"+rhidStr,"TH1D","SumQ"+rhidStr,"",3000,0,3000)
         self.writer.objs["SumQ"+rhidStr].Fill(event._rhsumQ_RAW[0])

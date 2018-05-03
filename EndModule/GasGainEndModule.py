@@ -44,7 +44,7 @@ class SkimTreeGasGainEndModule(EndModule):
         prefixStr = "ME"+endcapStr+str(station)
         chamberStr = str(chamber) if chamber > 9 else "0"+str(chamber)
         if station == 1 and (ring == 1 or ring == 4):
-            keyStr = "/".join([prefixStr,str(ring),chamberStr,str(layer)])
+            keyStr = "/".join([prefixStr,"1",chamberStr,str(layer)])
         else:
             keyStr = "/".join([prefixStr,str(ring),chamberStr,str(layer),"HVSegment"+str(hvseg)])
         return keyStr
@@ -52,17 +52,20 @@ class SkimTreeGasGainEndModule(EndModule):
     def make1DSummaryHist(self,collector,outputDir):
         c = ROOT.TCanvas()
 
-        textFile            = open(outputDir+"Outlier.txt","w")
-        badChTextFile       = open(outputDir+"BadChannel.txt","w")
-        outputFile          = ROOT.TFile(outputDir+"GasGain_1DSummaryHist.root","RECREATE")
-        h_trim_summary      = ROOT.TH1D("h_trim_summary","Gas Gain Summary (Trim Mean)",len(collector.samples),-0.5,len(collector.samples)-0.5)
-        h_trim_1D           = ROOT.TH1D("h_trim_1D","Gas Gain 1D (Trim Mean)",1500,0,1500)
-        h_trim_1D_ME11      = ROOT.TH1D("h_trim_1D_ME11","Gas Gain 1D, ME11 (Trim Mean)",1500,0,1500)
-        h_trim_1D_MEX1      = ROOT.TH1D("h_trim_1D_MEX1","Gas Gain 1D, MEX1 (Trim Mean)",1500,0,1500)
-        h_trim_1D_non_MEX1  = ROOT.TH1D("h_trim_1D_non_MEX1","Gas Gain 1D, Others (Trim Mean)",1500,0,1500)
-        h_trim_corrected_1D = ROOT.TH1D("h_trim_corrected_1D","Gas Gain 1D (Trim Mean Corrected)",1500,0,5)
-        h_entry_1D          = ROOT.TH1D("h_entry_1D","Number of entries 1D",100,0,10000)
+        textFile                        = open(outputDir+"Outlier.txt","w")
+        outputFile                      = ROOT.TFile(outputDir+"GasGain_1DSummaryHist.root","RECREATE")
+        h_trim_summary                  = ROOT.TH1D("h_trim_summary","Gas Gain Summary (Trim Mean)",len(collector.samples),-0.5,len(collector.samples)-0.5)
+        h_trim_1D                       = ROOT.TH1D("h_trim_1D","Gas Gain 1D (Trim Mean)",1500,0,1500)
+        h_trim_1D_ME11                  = ROOT.TH1D("h_trim_1D_ME11","Gas Gain 1D, ME11 (Trim Mean)",1500,0,1500)
+        h_trim_1D_MEX1                  = ROOT.TH1D("h_trim_1D_MEX1","Gas Gain 1D, MEX1 (Trim Mean)",1500,0,1500)
+        h_trim_1D_non_MEX1              = ROOT.TH1D("h_trim_1D_non_MEX1","Gas Gain 1D, Others (Trim Mean)",1500,0,1500)
+        h_trim_corrected_1D             = ROOT.TH1D("h_trim_corrected_1D","Gas Gain 1D (Trim Mean Corrected)",1500,0,2)
+        h_trim_corrected_1D_ME11        = ROOT.TH1D("h_trim_corrected_1D_ME11","Gas Gain 1D, ME11 (Trim Mean Corrected)",1500,0,2)
+        h_trim_corrected_1D_MEX1        = ROOT.TH1D("h_trim_corrected_1D_MEX1","Gas Gain 1D, MEX1 (Trim Mean Corrected)",1500,0,2)
+        h_trim_corrected_1D_non_MEX1    = ROOT.TH1D("h_trim_corrected_1D_non_MEX1","Gas Gain 1D, Others (Trim Mean Corrected)",1500,0,2)
+        h_entry_1D                      = ROOT.TH1D("h_entry_1D","Number of entries 1D",100,0,10000)
         for isample,sample in enumerate(collector.samples):
+            if sample == "ME11a" or sample == "ME11b": continue
             hist = collector.getObj(sample,""+sample)
             trimHist = self.makeTrimHist(hist)
             h_trim_summary.SetBinContent(isample+1,trimHist.GetMean())
@@ -86,36 +89,44 @@ class SkimTreeGasGainEndModule(EndModule):
                 hist = collector.getObj(sample,key.GetName())
                 trimHist1D = self.makeTrimHist(hist) 
                 h_trim_1D.Fill(trimHist1D.GetMean())
-                #h_trim_corrected_1D.Fill(trimHist1D.GetMean()/trimHist.GetMean())
                 h_trim_corrected_1D.Fill(trimHist1D.GetMean()/self.avgGasGainDict[histKey].GetMean())
                 h_entry_1D.Fill(hist.GetEntries())
-                if hist.GetEntries() < 10:
-                    badChTextFile.write(" ".join([detidStr,key.GetName(),sample,])+"\n")
                 if abs(trimHist1D.GetMean()/trimHist.GetMean()) < 0.84 or abs(trimHist1D.GetMean()/trimHist.GetMean()) > 1.16: 
                     textFile.write(" ".join([detidStr,key.GetName(),sample,"%4.2f"%abs(trimHist1D.GetMean()/trimHist.GetMean())])+"\n")
                 if sample[2:4] == "11": # ME11
+                    h_trim_corrected_1D_ME11.Fill(trimHist1D.GetMean()/self.avgGasGainDict[histKey].GetMean())
                     h_trim_1D_ME11.Fill(trimHist1D.GetMean())
                 elif sample[3:4] == "1": #MEX1
+                    h_trim_corrected_1D_MEX1.Fill(trimHist1D.GetMean()/self.avgGasGainDict[histKey].GetMean())
                     h_trim_1D_MEX1.Fill(trimHist1D.GetMean())
                 else:
+                    h_trim_corrected_1D_non_MEX1.Fill(trimHist1D.GetMean()/self.avgGasGainDict[histKey].GetMean())
                     h_trim_1D_non_MEX1.Fill(trimHist1D.GetMean()) 
 
         h_trim_summary.SetStats(0)
         h_trim_summary.GetXaxis().SetLabelSize(0.025)
         h_trim_summary.Draw()
+        c.SaveAs(outputDir+"trim_mean_summary.pdf")
         c.SaveAs(outputDir+"trim_mean_summary.png")
         h_trim_1D.SetStats(0)
         h_trim_1D.GetXaxis().SetLabelSize(0.025)
         h_trim_1D.Draw()
+        c.SaveAs(outputDir+"trim_mean_1D.pdf")
         c.SaveAs(outputDir+"trim_mean_1D.png")
         h_entry_1D.Draw()
         c.SaveAs(outputDir+"number_of_entries.png")
+        c.SaveAs(outputDir+"number_of_entries.pdf")
+        c.SetLogy(1)
+        c.SaveAs(outputDir+"number_of_entries_log.png")
+        c.SaveAs(outputDir+"number_of_entries_log.pdf")
+        c.SetLogy(0)
         leg = ROOT.TLegend(0.63,0.58,0.89,0.87)
+        leg.SetTextSize(0.02)
         drawList = [h_trim_1D_ME11,h_trim_1D_MEX1,h_trim_1D_non_MEX1]
         maxRange = max([hist.GetMaximum() for hist in drawList])
         for ihist,hist in enumerate(drawList):
             hist.SetStats(0)
-            hist.GetYaxis().SetRangeUser(0.01,maxRange*1.2)
+            hist.GetYaxis().SetRangeUser(0.00,maxRange*1.2)
             leg.AddEntry(hist,hist.GetTitle())
             hist.SetTitle("")
             hist.SetLineColor(ihist+1)
@@ -124,12 +135,48 @@ class SkimTreeGasGainEndModule(EndModule):
             else:
                 hist.Draw()
         leg.Draw()
+        c.SaveAs(outputDir+"trim_mean_1D_separate.png")
+        c.SaveAs(outputDir+"trim_mean_1D_separate.pdf")
+        for ihist,hist in enumerate(drawList):
+            hist.GetYaxis().SetRangeUser(0.01,maxRange*1.2)
+        c.SetLogy(1)
+        c.SaveAs(outputDir+"trim_mean_1D_separate_log.png")
+        c.SaveAs(outputDir+"trim_mean_1D_separate_log.pdf")
+
+        drawList = [h_trim_corrected_1D_ME11,h_trim_corrected_1D_MEX1,h_trim_corrected_1D_non_MEX1]
+        for hist in drawList:
+            hist.Rebin(8)
+            hist.Scale(1/hist.Integral())
+        maxRange = max([hist.GetMaximum() for hist in drawList])
+        leg = ROOT.TLegend(0.63,0.58,0.89,0.87)
+        leg.SetTextSize(0.02)
+        for ihist,hist in enumerate(drawList):
+            hist.SetStats(0)
+            hist.GetYaxis().SetRangeUser(0.00,maxRange*1.2)
+            leg.AddEntry(hist,hist.GetTitle())
+            hist.SetTitle("")
+            hist.SetLineColor(ihist+1)
+            if ihist:
+                hist.Draw("same")
+            else:
+                hist.Draw()
+        leg.Draw()
+        c.SetLogy(0)
         c.SaveAs(outputDir+"trim_mean_corrected_1D_separate.png")
+        c.SaveAs(outputDir+"trim_mean_corrected_1D_separate.pdf")
+        for ihist,hist in enumerate(drawList):
+            hist.GetYaxis().SetRangeUser(0.01,maxRange*1.2)
+        c.SetLogy(1)
+        c.SaveAs(outputDir+"trim_mean_corrected_1D_separate_log.png")
+        c.SaveAs(outputDir+"trim_mean_corrected_1D_separate_log.pdf")
+
         h_trim_corrected_1D.SetStats(0)
         h_trim_corrected_1D.GetXaxis().SetLabelSize(0.025)
         h_trim_corrected_1D.Draw()
+        c.SaveAs(outputDir+"trim_mean_corrected_1D.pdf")
         c.SaveAs(outputDir+"trim_mean_corrected_1D.png")
-        c.SetLogy()
+        c.SetLogy(1)
+        c.SaveAs(outputDir+"trim_mean_corrected_log_1D.pdf")
         c.SaveAs(outputDir+"trim_mean_corrected_log_1D.png")
 
         outputFile.Write()
