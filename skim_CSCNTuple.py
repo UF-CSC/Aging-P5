@@ -14,7 +14,7 @@ import imp,sys,os,time
 
 cfgFileName             = sys.argv[1]
 file                    = open( cfgFileName,'r')
-cfg                     = imp.load_source( 'UFCSC.__cfg_to_run__', cfgFileName, file)
+cfg                     = imp.load_source( 'UFCSCSkim.__cfg_to_run__', cfgFileName, file)
 
 nCores                  = cfg.nCores
 componentList           = cfg.componentList
