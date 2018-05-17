@@ -45,8 +45,9 @@ nEvents             = -1
 #outputDir           = "/raid/raid7/lucien/CSC/GasGain/Log/2018-04-08/comp_SingleMuon2017E_v2_skim_anl_all_ZMuMu_allChannel/"
 #outputDir           = "/raid/raid7/lucien/CSC/GasGain/Log/2018-05-03/comp_SingleMuon2017E_v3_skim_anl_all_ZMuMu_allChannel_CombinedME11ab/"
 #outputDir           = "/raid/raid7/lucien/CSC/GasGain/Log/2018-05-03/comp_SingleMuon2017E_v3_skim_anl_all_ZMuMu_allChannel_CombinedME11ab_yloc/"
-outputDir           = "/raid/raid7/lucien/CSC/GasGain/Log/2018-05-07/"+compStr+"_anl/"
-justEndSequence     = False 
+#outputDir           = "/raid/raid7/lucien/CSC/GasGain/Log/2018-05-07/"+compStr+"_anl/"
+outputDir           = "/raid/raid7/lucien/CSC/GasGain/Log/2018-05-17/"
+justEndSequence     = True
 
 sequence = Sequence()
 sequence.add(SkimTreeZMuMuSkimmer("ZMuMuSkimmer"))
@@ -57,11 +58,12 @@ sequence.add(gasGainPlotter)
 sequence.add(posPlotter)
 sequence.add(skimTreeRunPlotter)
 
-endSequence = EndSequence()
+endSequence = EndSequence(skipHadd=True)
 #endModuleOutputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-03-21/InclusiveSelection/"
 #endModuleOutputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-03-21/ZMuMuSelection/"
 #endModuleOutputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-04-16/ZMuMuSelection_ExcludeBadChannels/"
-endModuleOutputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-05-07/"+compStr+"_anl/"
+#endModuleOutputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-05-07/"+compStr+"_anl/"
+endModuleOutputDir = "/home/lucien/public_html/CSC/GasGainAnalysis/Log/2018-05-17/comp_SingleMuon2017_skim_anl/"
 skimTreeGasGainEndModule = SkimTreeGasGainEndModule(endModuleOutputDir)
 endSequence.add(skimTreeGasGainEndModule)
 skimTreePositionEndModule = SkimTreePositionEndModule(endModuleOutputDir,ChamberTypes,y_segment_dict,normalize=True)
