@@ -363,9 +363,9 @@ class SkimTreeGasGainEndModule(BaseEndModule):
         collector.samples.sort()
         #self.makeLocHist(collector,outputDir)
         #self.makeEntriesHist(collector,outputDir)
-        #self.makeAvgGasGain(collector)
-        self.makePosDepGasGain(collector,outputDir)
-        #self.make1DSummaryHist(collector,outputDir)
+        self.makeAvgGasGain(collector)
+        #self.makePosDepGasGain(collector,outputDir)
+        self.make1DSummaryHist(collector,outputDir)
 
         c = ROOT.TCanvas()
         for isample,sample in enumerate(collector.samples):
