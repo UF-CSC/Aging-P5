@@ -172,6 +172,7 @@ class SkimTreeGasGainEndModule(BaseEndModule):
                 if key.GetName().startswith("ME"): continue
                 if "Loc" in key.GetName(): continue
                 if "SumQX" in key.GetName() or "SumQY" in key.GetName(): continue
+                if sample in key.GetName(): continue
                 rhidList = self.convert_rhid(key.GetName().replace("SumQ",""))
                 detidStr =  self.convert_key(rhidList)
                 if detidStr in self.disHVList or detidStr in self.weakHVList: 

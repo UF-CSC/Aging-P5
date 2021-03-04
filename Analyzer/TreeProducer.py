@@ -16,7 +16,7 @@ class TreeProducer(ComponentProcessor):
         ROOT.gSystem.Load(os.environ["BASE_PATH"]+"/Src/AnalysisGasGain_cxx.so")
         anl = ROOT.AnalysisGasGain()
         histMan = ROOT.HistMan()
-        inputPath = self.prefix+self.component.path.replace("/cms/data","")
+        inputPath = self.component.path
         outputPath = self.outputPathTemplate
         self._reportProgress(progressReporter,0,2)
         anl.Setup(0,0)

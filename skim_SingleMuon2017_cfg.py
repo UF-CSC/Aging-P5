@@ -3,5 +3,5 @@ from Dataset.SingleMuon2017 import *
 componentList       = comp_SingleMuon2017_partial
 nCores              = 8
 disableProgressBar  = False
-outputPathTemplate = "/raid/raid7/lucien/CSC/GasGain/Log/2018-05-03/comp_SingleMuon2017CH_partial/SkimTree_%s.root"
+outputPathTemplate = "/cmsuf/data/store/user/t2/users/klo/CSC/Skim/210304_Data_2017/SkimTree_%s.root"
 

@@ -3,21 +3,20 @@ from Core.EventReader import EventLoopRunner, MPEventLoopRunner, EventLoop
 from Core.ProgressBar import ProgressBar,ProgressReport,ProgressMonitor,BProgressMonitor
 from Core.Concurrently import CommunicationChannel,CommunicationChannel0
 
-from Core.NanoAODResult.BEventBuilder import BEventBuilder
+from Core.BEventBuilder import BEventBuilder
 
-from Core.HeppyResult import ComponentLoop
-from Core.HeppyResult.UFComponentReader import UFComponentReader
+from Core.ComponentLoop import ComponentLoop
+from Core.UFComponentReader import UFComponentReader
 
 from Core.Utils.git import getGitDescribe,getGitDiff
+from Core.Utils.printFunc import pyPrint
 
 # Standard package
 import imp,sys,os,time
 
 cfgFileName             = sys.argv[1]
 file                    = open( cfgFileName,'r')
-cfg                     = imp.load_source( 'UFCSC.__cfg_to_run__', cfgFileName, file)
-
-rootTree                = "cscRootMaker/Events" if not hasattr(cfg,"rootTree") else cfg.rootTree
+cfg                     = imp.load_source( 'UFNTuple.__cfg_to_run__', cfgFileName, file)
 
 nCores                  = cfg.nCores
 componentList           = cfg.componentList
@@ -27,10 +26,20 @@ sequence                = cfg.sequence
 outputInfo              = cfg.outputInfo
 endSequence             = cfg.endSequence
 justEndSequence         = cfg.justEndSequence if hasattr(cfg,"justEndSequence") else False
+mergeSampleDict         = cfg.mergeSampleDict if hasattr(cfg,"mergeSampleDict") else {}
+mergeSigSampleDict      = cfg.mergeSigSampleDict if hasattr(cfg,"mergeSigSampleDict") else {}
+verbose                 = cfg.verbose if hasattr(cfg,"verbose") else False
+skipGitDetail           = cfg.skipGitDetail if hasattr(cfg,"skipGitDetail") else False
+eventSelection          = cfg.eventSelection if hasattr(cfg,"eventSelection") else None
+checkInputFile          = cfg.checkInputFile if hasattr(cfg,"checkInputFile") else False
 
+if verbose:
+    pyPrint("Starting")
 start_time = time.time()
 
 if not justEndSequence:
+    if verbose:
+        pyPrint("Initiating progress bar")
     progressBar = ProgressBar()
     
     if nCores != 1:
@@ -44,34 +53,49 @@ if not justEndSequence:
     if not disableProgressBar: progressMonitor.begin()
     communicationChannel.begin()
     
-    print "\nLoading samples:\n"
-    
     eventLoopRunner = MPEventLoopRunner(communicationChannel)
-    eventBuilder    = BEventBuilder(rootTree,nEvents)
-    componentReader = UFComponentReader(eventBuilder, eventLoopRunner, sequence, outputInfo)
+    eventBuilder    = BEventBuilder()
+    componentReader = UFComponentReader(eventBuilder, eventLoopRunner, sequence, outputInfo,selection=eventSelection)
     componentLoop   = ComponentLoop(componentReader)
+
+    if checkInputFile:
+        pyPrint("\nChecking samples...\n")
+        try:
+            for d in componentList:
+                cmps = d.makeComponents()
+                for cmp in cmps:
+                    eventBuilder.build(cmp)
+        except ReferenceError:
+            pyPrint("Paths for input files are wrong, please check")
+            sys.exit()
     
-    print "\nBegin Running\n"
+    pyPrint("\nLoading samples:\n")
+    for cmp in componentList:
+        pyPrint(cmp.name)
+    
+    pyPrint("\nBegin Running\n")
     componentLoop(componentList)
     
-    print "\nEnd Running\n"
-    print "\nOutput saved in "+outputInfo.outputDir+"\n"
+    pyPrint("\nEnd Running\n")
+    pyPrint("\nOutput saved in "+outputInfo.outputDir+"\n")
+   
+    if not skipGitDetail:
+        gitFile        = os.path.join(outputInfo.outputDir,"gitDetails.txt")
+        gitVerboseFile = os.path.join(outputInfo.outputDir,"gitVerboseDetails.txt")
+        with open(gitFile,'w') as f:
+            f.write(getGitDescribe())
     
-    gitFile        = os.path.join(outputInfo.outputDir,"gitDetails.txt")
-    gitVerboseFile = os.path.join(outputInfo.outputDir,"gitVerboseDetails.txt")
-    with open(gitFile,'w') as f:
-        f.write(getGitDescribe())
+        with open(gitVerboseFile,'w') as f:
+            f.write(getGitDiff())
     
-    with open(gitVerboseFile,'w') as f:
-        f.write(getGitDiff())
-    
+    if verbose:
+        pyPrint("Ending progress bar")
     if not disableProgressBar: progressMonitor.end()
     communicationChannel.end()
 
-if endSequence:
-    print "\nBegin Summarising\n"
-    print "\nInput used: "+outputInfo.outputDir+"\n"
-    endSequence.run(outputInfo)
+pyPrint("\nBegin Summarising\n")
+pyPrint("\nInput used: "+outputInfo.outputDir+"\n")
+endSequence.run(outputInfo,componentList,mergeSampleDict=mergeSampleDict,mergeSigSampleDict=mergeSigSampleDict)
 
 elapsed_time = time.time() - start_time
-print "Time used: "+str(elapsed_time)+"s"
+pyPrint("Time used: "+str(elapsed_time)+"s")

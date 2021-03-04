@@ -1,6 +1,6 @@
 from Core.Module import Module
 
-from Core.CSCNTupleResult.Collection import Collection
+from CSCNTupleResult.Collection import Collection
 
 from Config.Chamber import *
 
@@ -32,12 +32,12 @@ class GasGainPlotter(Module):
 
 class SkimTreeGasGainPlotter(Module):
     def begin(self):
-        self.writer.book("SumQ"+self.dataset.name,"TH1D",self.dataset.name,"",3000,0,3000)
+        self.writer.book("SumQ"+self.dataset.parent.name,"TH1D",self.dataset.parent.name,"",3000,0,3000)
 
     def analyze(self,event):
-        self.writer.objs["SumQ"+self.dataset.name].Fill(event._rhsumQ_RAW[0])
+        self.writer.objs["SumQ"+self.dataset.parent.name].Fill(event._rhsumQ_RAW[0])
         rhidStr = str(event._rhid[0])
-        if self.dataset.name == "ME11": rhidStr = rhidStr[0:2]+"1"+rhidStr[3:]
+        if self.dataset.parent.name == "ME11": rhidStr = rhidStr[0:2]+"1"+rhidStr[3:]
         if "SumQ"+rhidStr not in self.writer.objs:
             self.writer.book("SumQ"+rhidStr,"TH1D","SumQ"+rhidStr,"",3000,0,3000)
         self.writer.objs["SumQ"+rhidStr].Fill(event._rhsumQ_RAW[0])

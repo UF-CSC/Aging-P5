@@ -1,6 +1,6 @@
 from Core.Module import Module
 
-from Core.CSCNTupleResult.Collection import Collection
+from CSCNTupleResult.Collection import Collection
 
 from Config.Chamber import ChamberDict
 
